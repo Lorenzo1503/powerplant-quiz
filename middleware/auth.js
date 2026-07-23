@@ -1,30 +1,19 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
-const { getDb } = require('../db');
+const { getDb, queryOne } = require('../db');
 
 passport.use(new LocalStrategy(async (username, password, done) => {
   try {
     const db = await getDb();
-    const result = db.exec(
+    const user = queryOne(
       'SELECT id, username, email, password, role, full_name, is_active FROM users WHERE username = ? OR email = ? LIMIT 1',
-      { bind: [username, username] }
+      [username, username]
     );
 
-    if (!result.length || !result[0].values.length) {
+    if (!user) {
       return done(null, false, { message: 'Invalid credentials' });
     }
-
-    const userData = result[0].values[0];
-    const user = {
-      id: userData[0],
-      username: userData[1],
-      email: userData[2],
-      password: userData[3],
-      role: userData[4],
-      full_name: userData[5],
-      is_active: userData[6]
-    };
 
     if (!user.is_active) {
       return done(null, false, { message: 'Account is deactivated' });
@@ -54,22 +43,21 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const db = await getDb();
-    const result = db.exec(
+    const user = queryOne(
       'SELECT id, username, email, role, full_name FROM users WHERE id = ? LIMIT 1',
-      { bind: [id] }
+      [id]
     );
 
-    if (!result.length || !result[0].values.length) {
+    if (!user) {
       return done(null, false);
     }
 
-    const userData = result[0].values[0];
     done(null, {
-      id: userData[0],
-      username: userData[1],
-      email: userData[2],
-      role: userData[3],
-      full_name: userData[4]
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      full_name: user.full_name
     });
   } catch (err) {
     done(err);
@@ -95,4 +83,3 @@ function ensureAdmin(req, res, next) {
 }
 
 module.exports = { ensureAuthenticated, ensureAdmin };
-

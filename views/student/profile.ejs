@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+  <p>Manage your account information</p>
+</div>
+
+<div class="profile-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-info-circle"></i> Account Information</h2>
+    </div>
+    <div class="card-body">
+      <form action="/student/profile/update" method="POST" class="form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" value="<%= profile.username %>" disabled class="form-control" />
+          <small>Username cannot be changed</small>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" value="<%= profile.email %>" disabled class="form-control" />
+          <small>Email cannot be changed</small>
+        </div>
+        <div class="form-group">
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" name="full_name" value="<%= profile.full_name || '' %>" class="form-control" placeholder="Enter your full name" />
+        </div>
+        <div class="form-group">
+          <label for="student_id">Student ID</label>
+          <input type="text" id="student_id" name="student_id" value="<%= profile.student_id || '' %>" class="form-control" placeholder="Enter your student ID" />
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" value="<%= profile.role %>" disabled class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Member Since</label>
+          <input type="text" value="<%= new Date(profile.created_at).toLocaleDateString() %>" disabled class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i> Update Profile
+        </button>
+      </form>
+    </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-key"></i> Change Password</h2>
+    </div>
+    <div class="card-body">
+      <form action="/student/profile/change-password" method="POST" class="form">
+        <div class="form-group">
+          <label for="current_password">Current Password</label>
+          <input type="password" id="current_password" name="current_password" class="form-control" required />
+        </div>
+        <div class="form-group">
+          <label for="new_password">New Password</label>
+          <input type="password" id="new_password" name="new_password" class="form-control" required minlength="6" />
+          <small>Minimum 6 characters</small>
+        </div>
+        <div class="form-group">
+          <label for="confirm_password">Confirm New Password</label>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-warning">
+          <i class="fas fa-key"></i> Change Password
+        </button>
+      </form>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
+</parameter>
+</invoke>
+</tool_calls>

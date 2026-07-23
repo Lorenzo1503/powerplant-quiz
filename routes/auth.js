@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const bcrypt = require('bcryptjs');
-const { getDb } = require('../db');
+const { getDb, queryOne, execute } = require('../db');
 
 // Login page
 router.get('/login', (req, res) => {
@@ -35,7 +35,6 @@ router.get('/register', (req, res) => {
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password, confirm_password, full_name, student_id } = req.body;
-
     const errors = [];
     if (!username || !email || !password || !confirm_password) {
       errors.push('Please fill in all required fields');
@@ -49,29 +48,20 @@ router.post('/register', async (req, res) => {
     if (!email.includes('@')) {
       errors.push('Please enter a valid email address');
     }
-
     if (errors.length) {
       req.flash('error_msg', errors.join('. '));
       return res.redirect('/register');
     }
-
-    const db = await getDb();
-    const existingUser = db.exec(
-      'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',
-      { bind: [username, email] }
-    );
-
-    if (existingUser.length && existingUser[0].values.length) {
+    const existingUser = queryOne('SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1', [username, email]);
+    if (existingUser) {
       req.flash('error_msg', 'Username or email already exists');
       return res.redirect('/register');
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
-    db.run(
-      `INSERT INTO users (username, email, password, role, full_name, student_id) VALUES (?, ?, ?, 'student', ?, ?)`,
-      [username, email, hashedPassword, full_name || username, student_id || '']
+    execute(
+      'INSERT INTO users (username, email, password, role, full_name, student_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, email, hashedPassword, 'student', full_name || username, student_id || '']
     );
-
     req.flash('success_msg', 'Account created successfully! Please log in.');
     res.redirect('/login');
   } catch (err) {
@@ -98,9 +88,8 @@ router.get('/forgot-password', (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const db = await getDb();
-    const user = db.exec('SELECT id FROM users WHERE email = ? LIMIT 1', { bind: [email] });
-    if (!user.length || !user[0].values.length) {
+    const user = queryOne('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+    if (!user) {
       req.flash('success_msg', 'If an account with that email exists, password reset instructions have been sent.');
       return res.redirect('/login');
     }
@@ -114,4 +103,3 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 module.exports = router;
-

@@ -5,11 +5,12 @@ const path = require('path');
 const DB_PATH = path.join(__dirname, 'database.sqlite');
 
 let db = null;
+let SQL = null;
 
 async function getDb() {
   if (db) return db;
 
-  const SQL = await initSqlJs();
+  SQL = await initSqlJs();
   
   if (fs.existsSync(DB_PATH)) {
     const buffer = fs.readFileSync(DB_PATH);
@@ -18,7 +19,7 @@ async function getDb() {
     db = new SQL.Database();
   }
 
-  // Enable WAL mode and foreign keys
+  // Enable foreign keys
   db.run('PRAGMA foreign_keys = ON;');
   
   return db;
@@ -39,5 +40,44 @@ async function closeDb() {
   }
 }
 
-module.exports = { getDb, saveDb, closeDb };
+function queryAll(sql, params = []) {
+  if (!db) throw new Error('Database not initialized');
+  const bindParams = Array.isArray(params) ? params : (params.bind || []);
+  const stmt = db.prepare(sql);
+  if (bindParams.length > 0) stmt.bind(bindParams);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
+}
 
+function queryOne(sql, params = []) {
+  const rows = queryAll(sql, params);
+  return rows.length > 0 ? rows[0] : null;
+}
+
+function execute(sql, params = []) {
+  if (!db) throw new Error('Database not initialized');
+  const bindParams = Array.isArray(params) ? params : (params.bind || []);
+  db.run(sql, bindParams);
+  return db.getRowsModified();
+}
+
+function run(sql) {
+  if (!db) throw new Error('Database not initialized');
+  db.run(sql);
+}
+
+function exec(sql, params) {
+  const rows = queryAll(sql, params);
+  if (rows.length === 0) return [];
+  const columns = Object.keys(rows[0]);
+  return [{
+    columns,
+    values: rows.map(row => columns.map(col => row[col]))
+  }];
+}
+
+module.exports = { getDb, saveDb, closeDb, queryAll, queryOne, execute, run, exec };

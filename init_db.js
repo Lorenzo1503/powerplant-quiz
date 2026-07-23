@@ -1,4 +1,4 @@
-const { getDb, saveDb, closeDb } = require('./db');
+const { getDb, run, execute, queryOne, saveDb, closeDb } = require('./db');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -7,8 +7,10 @@ const { parse } = require('csv-parse/sync');
 async function initializeDatabase() {
   const db = await getDb();
 
+  console.log('Creating tables...');
+  
   // Create tables
-  db.run(`
+  run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -23,7 +25,7 @@ async function initializeDatabase() {
     )
   `);
 
-  db.run(`
+  run(`
     CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY,
       type TEXT,
@@ -61,7 +63,7 @@ async function initializeDatabase() {
     )
   `);
 
-  db.run(`
+  run(`
     CREATE TABLE IF NOT EXISTS quiz_attempts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -74,7 +76,7 @@ async function initializeDatabase() {
     )
   `);
 
-  db.run(`
+  run(`
     CREATE TABLE IF NOT EXISTS quiz_answers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       attempt_id INTEGER NOT NULL,
@@ -87,23 +89,41 @@ async function initializeDatabase() {
   `);
 
   // Create admin user if not exists
-  const existingAdmin = db.exec("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
-  if (!existingAdmin.length) {
+  const existingAdmin = queryOne("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+  if (!existingAdmin) {
     const hashedPassword = bcrypt.hashSync('Admin@123', 10);
-    db.run(
-      `INSERT INTO users (username, email, password, role, full_name, is_active) VALUES (?, ?, ?, ?, ?, ?)`,
+    execute(
+      'INSERT INTO users (username, email, password, role, full_name, is_active) VALUES (?, ?, ?, ?, ?, ?)',
       ['admin', 'admin@powerplant.edu', hashedPassword, 'admin', 'System Administrator', 1]
     );
     console.log('Admin user created: admin / Admin@123');
+  }
+  
+  // Create a test student if not exists
+  const existingStudent = queryOne("SELECT id FROM users WHERE username = 'student' LIMIT 1");
+  if (!existingStudent) {
+    const hashedPassword = bcrypt.hashSync('Student@123', 10);
+    execute(
+      "INSERT INTO users (username, email, password, role, full_name, is_active) VALUES (?, ?, ?, 'student', ?, 1)",
+      ['student', 'student@powerplant.edu', hashedPassword, 'Demo Student']
+    );
+    console.log('Student user created: student / Student@123');
   }
 
   // Import questions from CSV
   let csvFilename = 'question_bank.csv';
   if (!fs.existsSync(path.join(__dirname, csvFilename))) {
     csvFilename = 'questions.csv';
+    if (!fs.existsSync(path.join(__dirname, csvFilename))) {
+      // Try to find any CSV in the directory
+      const files = fs.readdirSync(__dirname).filter(f => f.endsWith('.csv'));
+      if (files.length > 0) csvFilename = files[0];
+    }
   }
+  
   const csvPath = path.join(__dirname, csvFilename);
   if (fs.existsSync(csvPath)) {
+    console.log(`Importing questions from: ${csvFilename}`);
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     const records = parse(csvContent, {
       columns: true,
@@ -113,50 +133,60 @@ async function initializeDatabase() {
     });
 
     let importedCount = 0;
-    const stmt = db.prepare(`
-      INSERT OR IGNORE INTO questions (
-        id, type, module, topic, difficulty, difficulty_value,
-        question_text, option_a, option_b, option_c, option_d,
-        correct_answer, curriculum_map_id, course_code, subtopic,
-        discrimination, guessing, active, exposure_count, attempt_count,
-        correct_count, average_time_seconds, explanation, learning_outcome
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    let skippedCount = 0;
 
     for (const row of records) {
       try {
-        stmt.run([
-          parseInt(row.ID) || 0,
-          row.Type || '',
-          row.Module || '',
-          row.Topic || '',
-          row.Difficulty || '',
-          parseInt(row.DifficultyValue) || 0,
-          row.QuestionText || '',
-          row.OptionA || '',
-          row.OptionB || '',
-          row.OptionC || '',
-          row.OptionD || '',
-          row.CorrectAnswer || '',
-          row.CurriculumMapID || '',
-          row.CourseCode || '',
-          row.Subtopic || '',
-          parseFloat(row.Discrimination) || 0,
-          parseFloat(row.Guessing) || 0,
-          row.Active === 'TRUE' ? 1 : 0,
-          parseInt(row.ExposureCount) || 0,
-          parseInt(row.AttemptCount) || 0,
-          parseInt(row.CorrectCount) || 0,
-          parseFloat(row.AverageTimeSeconds) || 0,
-          row.Explanation || '',
-          row.LearningOutcome || ''
-        ]);
+        const id = parseInt(row.ID);
+        if (!id) { skippedCount++; continue; }
+        
+        // Check if question already exists
+        const existing = queryOne('SELECT id FROM questions WHERE id = ?', [id]);
+        if (existing) { skippedCount++; continue; }
+        
+        execute(
+          `INSERT OR IGNORE INTO questions (
+            id, type, module, topic, difficulty, difficulty_value,
+            question_text, option_a, option_b, option_c, option_d,
+            correct_answer, curriculum_map_id, course_code, subtopic,
+            discrimination, guessing, active, exposure_count, attempt_count,
+            correct_count, average_time_seconds, explanation, learning_outcome
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            id,
+            row.Type || '',
+            row.Module || '',
+            row.Topic || '',
+            row.Difficulty || '',
+            parseInt(row.DifficultyValue) || 0,
+            row.QuestionText || '',
+            row.OptionA || '',
+            row.OptionB || '',
+            row.OptionC || '',
+            row.OptionD || '',
+            row.CorrectAnswer || '',
+            row.CurriculumMapID || '',
+            row.CourseCode || '',
+            row.Subtopic || '',
+            parseFloat(row.Discrimination) || 0,
+            parseFloat(row.Guessing) || 0,
+            row.Active === 'TRUE' ? 1 : 0,
+            parseInt(row.ExposureCount) || 0,
+            parseInt(row.AttemptCount) || 0,
+            parseInt(row.CorrectCount) || 0,
+            parseFloat(row.AverageTimeSeconds) || 0,
+            row.Explanation || '',
+            row.LearningOutcome || ''
+          ]
+        );
         importedCount++;
       } catch (e) {
-        // Skip invalid rows
+        skippedCount++;
       }
     }
-    console.log(`Imported ${importedCount} questions from CSV`);
+    console.log(`Imported ${importedCount} questions from CSV (${skippedCount} skipped)`);
+  } else {
+    console.log('No CSV file found. Run with questions.csv in the project directory.');
   }
 
   saveDb();
@@ -168,6 +198,8 @@ module.exports = initializeDatabase;
 
 // Run directly if this file is executed standalone
 if (require.main === module) {
-  initializeDatabase().catch(console.error);
+  initializeDatabase().catch(err => {
+    console.error('Database initialization failed:', err);
+    process.exit(1);
+  });
 }
-
