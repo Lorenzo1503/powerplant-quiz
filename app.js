@@ -4,6 +4,7 @@ const session = require('express-session');
 const passport = require('passport');
 const flash = require('connect-flash');
 const path = require('path');
+const fs = require('fs');
 const { getDb } = require('./db');
 require('./middleware/auth');
 
@@ -66,20 +67,33 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).render('error', { 
+  res.status(500).render('error', {
     title: 'Server Error',
-    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message 
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
   });
 });
 
 // Initialize DB and start server
 async function start() {
   try {
-    // Initialize database on first request
+    // Auto-initialize database on first run
+    const dbPath = path.join(__dirname, 'database.sqlite');
+    if (!fs.existsSync(dbPath)) {
+      console.log('Database not found. Running initialization...');
+      try {
+        await require('./init_db')();
+        console.log('Database initialized successfully.');
+      } catch (initErr) {
+        console.error('Database initialization failed:', initErr.message);
+        // Continue anyway - tables might already exist
+      }
+    }
+
+    // Store getDb function for route access
     app.locals.getDb = getDb;
-    
-    app.listen(PORT, () => {
-      console.log(`PowerPlant Quiz server running on http://localhost:${PORT}`);
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`PowerPlant Quiz server running on http://0.0.0.0:${PORT}`);
     });
   } catch (err) {
     console.error('Failed to start server:', err);
@@ -88,4 +102,3 @@ async function start() {
 }
 
 start();
-

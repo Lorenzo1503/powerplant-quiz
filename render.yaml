@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: powerplant-quiz
+    runtime: node
+    repo: https://github.com/Lorenzo1503/powerplant-quiz
+    branch: master
+    buildCommand: node init_db.js
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000

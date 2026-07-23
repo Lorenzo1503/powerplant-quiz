@@ -1,0 +1,95 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-tachometer-alt"></i> Student Dashboard</h1>
+  <p>Welcome back, <%= user.full_name || user.username %>!</p>
+</div>
+
+<div class="welcome-card">
+  <div class="welcome-content">
+    <h2>Ready to Test Your Knowledge?</h2>
+    <p>Practice with our comprehensive question bank covering Power Plant Engineering, Thermodynamics, Heat Transfer, and more.</p>
+    <a href="/quiz/start" class="btn btn-primary btn-lg">
+      <i class="fas fa-play-circle"></i> Start a New Quiz
+    </a>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.totalQuizzes %></h3>
+      <p>Quizzes Taken</p>
+    </div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.avgScore %>%</h3>
+      <p>Average Score</p>
+    </div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-icon"><i class="fas fa-bullseye"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.totalCorrect %>/<%= stats.totalQuestions %></h3>
+      <p>Correct Answers</p>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-book"></i> Available Modules</h2>
+    </div>
+    <div class="card-body">
+      <% if (modules.length) { %>
+      <div class="modules-grid">
+        <% modules.forEach(function(m) { %>
+        <a href="/quiz/start?module=<%= encodeURIComponent(m) %>" class="module-card">
+          <i class="fas fa-cube"></i>
+          <span><%= m %></span>
+        </a>
+        <% }); %>
+      </div>
+      <% } else { %>
+      <p class="text-muted">No modules available yet.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-history"></i> Recent Quizzes</h2>
+      <a href="/quiz/history" class="btn btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+      <% if (recentQuizzes.length) { %>
+      <div class="quiz-history-list">
+        <% recentQuizzes.forEach(function(q) { %>
+        <div class="quiz-history-item">
+          <div class="quiz-history-info">
+            <span class="badge badge-<%= q.score >= 60 ? 'active' : 'inactive' %>">
+              <%= q.score %>%
+            </span>
+            <span><%= q.correct_count %>/<%= q.total_questions %> correct</span>
+          </div>
+          <div class="quiz-history-date">
+            <%= new Date(q.completed_at).toLocaleDateString() %>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-clipboard-list fa-3x"></i>
+        <p>No quizzes taken yet. Start your first quiz!</p>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

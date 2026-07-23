@@ -965,6 +965,5 @@ const THERMODYNAMICS_KNOWLEDGE = {
   pr_air_value: 0.7,
   
   // Least Prandtl number
-  pr_least: 'Liquid metals',
-  
-  // Duhring's
+  pr_least: 'Liquid metals'
+};

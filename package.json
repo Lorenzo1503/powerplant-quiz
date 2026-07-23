@@ -1,9 +1,11 @@
 {
   "name": "powerplant-quiz",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "PowerPlant Engineering Quiz Platform",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "build-db": "node init_db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

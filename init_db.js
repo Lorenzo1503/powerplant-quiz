@@ -98,7 +98,11 @@ async function initializeDatabase() {
   }
 
   // Import questions from CSV
-  const csvPath = path.join(__dirname, 'question_bank.csv');
+  let csvFilename = 'question_bank.csv';
+  if (!fs.existsSync(path.join(__dirname, csvFilename))) {
+    csvFilename = 'questions.csv';
+  }
+  const csvPath = path.join(__dirname, csvFilename);
   if (fs.existsSync(csvPath)) {
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
     const records = parse(csvContent, {
@@ -160,5 +164,10 @@ async function initializeDatabase() {
   console.log('Database initialized successfully!');
 }
 
-initializeDatabase().catch(console.error);
+module.exports = initializeDatabase;
+
+// Run directly if this file is executed standalone
+if (require.main === module) {
+  initializeDatabase().catch(console.error);
+}
 
