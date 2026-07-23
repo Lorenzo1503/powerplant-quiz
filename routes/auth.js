@@ -15,10 +15,32 @@ router.get('/login', (req, res) => {
 });
 
 router.post('/login', (req, res, next) => {
-  passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error('Login error:', err);
+      req.flash('error_msg', 'An error occurred during login');
+      return next(err);
+    }
+    if (!user) {
+      req.flash('error_msg', info?.message || 'Invalid credentials');
+      return res.redirect('/login');
+    }
+    req.login(user, function(loginErr) {
+      if (loginErr) {
+        console.error('Session login error:', loginErr);
+        req.flash('error_msg', 'Failed to create session');
+        return next(loginErr);
+      }
+      // Save session and redirect based on role
+      req.session.save(function(saveErr) {
+        if (saveErr) console.error('Session save error:', saveErr);
+        req.flash('success_msg', 'Welcome back, ' + (user.full_name || user.username) + '!');
+        if (user.role === 'admin') {
+          return res.redirect('/admin/dashboard');
+        }
+        return res.redirect('/student/dashboard');
+      });
+    });
   })(req, res, next);
 });
 
@@ -101,8 +123,10 @@ router.post('/register', async (req, res) => {
 router.get('/logout', (req, res) => {
   req.logout((err) => {
     if (err) console.error('Logout error:', err);
-    req.flash('success_msg', 'You have been logged out successfully');
-    res.redirect('/login');
+    req.session.destroy((destroyErr) => {
+      if (destroyErr) console.error('Session destroy error:', destroyErr);
+      res.redirect('/login');
+    });
   });
 });
 
@@ -132,4 +156,3 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 module.exports = router;
-
