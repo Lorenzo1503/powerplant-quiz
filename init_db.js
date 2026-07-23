@@ -16,6 +16,7 @@ async function initializeDatabase() {
       username TEXT UNIQUE NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      google_id TEXT,
       role TEXT NOT NULL DEFAULT 'student',
       full_name TEXT,
       student_id TEXT,
@@ -24,6 +25,13 @@ async function initializeDatabase() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add google_id column if it doesn't exist (migration for existing databases)
+  try {
+    run(`ALTER TABLE users ADD COLUMN google_id TEXT`);
+  } catch (e) {
+    // Column already exists, ignore
+  }
 
   run(`
     CREATE TABLE IF NOT EXISTS questions (

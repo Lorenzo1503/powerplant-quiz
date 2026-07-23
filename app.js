@@ -59,6 +59,15 @@ app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
+// Landing page for non-authenticated users
+app.get('/landing', (req, res) => {
+  if (req.user) {
+    if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
+    return res.redirect('/student/dashboard');
+  }
+  res.render('landing', { title: 'PowerPlant Quiz - Engineering Exam Prep' });
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });

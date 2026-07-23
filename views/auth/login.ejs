@@ -23,6 +23,15 @@
         <i class="fas fa-sign-in-alt"></i> Sign In
       </button>
     </form>
+
+    <% if (typeof hasGoogle !== 'undefined' && hasGoogle) { %>
+    <div class="divider">
+      <span>or continue with</span>
+    </div>
+    <a href="/auth/google" class="btn btn-google btn-block">
+      <i class="fab fa-google"></i> Sign in with Google
+    </a>
+    <% } %>
     
     <div class="auth-links">
       <a href="/forgot-password"><i class="fas fa-key"></i> Forgot Password?</a>
@@ -32,7 +41,8 @@
     <div class="auth-demo">
       <p><strong>Demo Accounts:</strong></p>
       <p>Admin: <code>admin</code> / <code>Admin@123</code></p>
-      <p><em>Register a new account for student access</em></p>
+      <p>Student: <code>student</code> / <code>Student@123</code></p>
+      <p><em>Register a new account for personalized access</em></p>
     </div>
   </div>
 </div>

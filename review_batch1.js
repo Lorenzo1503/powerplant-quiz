@@ -8,7 +8,7 @@ const path = require('path');
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify/sync');
 
-const INPUT_FILE = path.join(__dirname, 'question_bank.csv');
+const INPUT_FILE = path.join(__dirname, 'questions.csv');
 const OUTPUT_FILE = path.join(__dirname, 'QuestionBank_Reviewed.csv');
 const PROGRESS_FILE = path.join(__dirname, 'review_progress.json');
 

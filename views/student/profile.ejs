@@ -5,7 +5,7 @@
   <p>Manage your account information</p>
 </div>
 
-<div class="profile-grid">
+<div class="dashboard-grid">
   <div class="card">
     <div class="card-header">
       <h2><i class="fas fa-info-circle"></i> Account Information</h2>
@@ -14,12 +14,12 @@
       <form action="/student/profile/update" method="POST" class="form">
         <div class="form-group">
           <label for="username">Username</label>
-          <input type="text" id="username" value="<%= profile.username %>" disabled class="form-control" />
+          <input type="text" id="username" value="<%= profile.username %>" disabled class="form-control form-control-disabled" />
           <small>Username cannot be changed</small>
         </div>
         <div class="form-group">
           <label for="email">Email</label>
-          <input type="email" id="email" value="<%= profile.email %>" disabled class="form-control" />
+          <input type="email" id="email" value="<%= profile.email %>" disabled class="form-control form-control-disabled" />
           <small>Email cannot be changed</small>
         </div>
         <div class="form-group">
@@ -32,17 +32,18 @@
         </div>
         <div class="form-group">
           <label>Role</label>
-          <input type="text" value="<%= profile.role %>" disabled class="form-control" />
+          <input type="text" value="<%= profile.role %>" disabled class="form-control form-control-disabled" />
         </div>
         <div class="form-group">
           <label>Member Since</label>
-          <input type="text" value="<%= new Date(profile.created_at).toLocaleDateString() %>" disabled class="form-control" />
+          <input type="text" value="<%= new Date(profile.created_at).toLocaleDateString() %>" disabled class="form-control form-control-disabled" />
         </div>
         <button type="submit" class="btn btn-primary">
           <i class="fas fa-save"></i> Update Profile
         </button>
       </form>
     </div>
+  </div>
 
   <div class="card">
     <div class="card-header">
@@ -68,6 +69,7 @@
         </button>
       </form>
     </div>
+  </div>
 </div>
 
 <%- include('../partials/footer') %>

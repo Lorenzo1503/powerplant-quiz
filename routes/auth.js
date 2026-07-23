@@ -2,18 +2,18 @@ const express = require('express');
 const router = express.Router();
 const passport = require('passport');
 const bcrypt = require('bcryptjs');
-const { getDb, queryOne, execute } = require('../db');
+const { getDb, queryOne, execute, saveDb } = require('../db');
 
-// Login page
+// ===== LOGIN =====
 router.get('/login', (req, res) => {
   if (req.user) {
     if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
     return res.redirect('/student/dashboard');
   }
-  res.render('auth/login', { title: 'Login' });
+  const hasGoogle = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  res.render('auth/login', { title: 'Login', hasGoogle });
 });
 
-// Login handler
 router.post('/login', (req, res, next) => {
   passport.authenticate('local', {
     successRedirect: '/',
@@ -22,7 +22,21 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
-// Register page
+// ===== GOOGLE OAUTH =====
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+router.get('/auth/google/callback', 
+  passport.authenticate('google', { 
+    failureRedirect: '/login',
+    failureFlash: true 
+  }),
+  (req, res) => {
+    req.flash('success_msg', 'Successfully signed in with Google!');
+    res.redirect('/');
+  }
+);
+
+// ===== REGISTER =====
 router.get('/register', (req, res) => {
   if (req.user) {
     if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
@@ -31,11 +45,11 @@ router.get('/register', (req, res) => {
   res.render('auth/register', { title: 'Create Account' });
 });
 
-// Register handler
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password, confirm_password, full_name, student_id } = req.body;
     const errors = [];
+    
     if (!username || !email || !password || !confirm_password) {
       errors.push('Please fill in all required fields');
     }
@@ -48,39 +62,51 @@ router.post('/register', async (req, res) => {
     if (!email.includes('@')) {
       errors.push('Please enter a valid email address');
     }
+    if (username.length < 3) {
+      errors.push('Username must be at least 3 characters');
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      errors.push('Username can only contain letters, numbers, and underscores');
+    }
+
     if (errors.length) {
       req.flash('error_msg', errors.join('. '));
       return res.redirect('/register');
     }
+
+    await getDb();
     const existingUser = queryOne('SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1', [username, email]);
     if (existingUser) {
       req.flash('error_msg', 'Username or email already exists');
       return res.redirect('/register');
     }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     execute(
-      'INSERT INTO users (username, email, password, role, full_name, student_id) VALUES (?, ?, ?, ?, ?, ?)',
+      'INSERT INTO users (username, email, password, role, full_name, student_id, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)',
       [username, email, hashedPassword, 'student', full_name || username, student_id || '']
     );
+    saveDb();
+
     req.flash('success_msg', 'Account created successfully! Please log in.');
     res.redirect('/login');
   } catch (err) {
     console.error('Registration error:', err);
-    req.flash('error_msg', 'An error occurred during registration');
+    req.flash('error_msg', 'An error occurred during registration. Please try again.');
     res.redirect('/register');
   }
 });
 
-// Logout
+// ===== LOGOUT =====
 router.get('/logout', (req, res) => {
   req.logout((err) => {
-    if (err) console.error(err);
-    req.flash('success_msg', 'You have been logged out');
+    if (err) console.error('Logout error:', err);
+    req.flash('success_msg', 'You have been logged out successfully');
     res.redirect('/login');
   });
 });
 
-// Forgot password page
+// ===== FORGOT PASSWORD =====
 router.get('/forgot-password', (req, res) => {
   res.render('auth/forgot-password', { title: 'Forgot Password' });
 });
@@ -88,18 +114,22 @@ router.get('/forgot-password', (req, res) => {
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
-    const user = queryOne('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
-    if (!user) {
-      req.flash('success_msg', 'If an account with that email exists, password reset instructions have been sent.');
-      return res.redirect('/login');
+    await getDb();
+    const user = queryOne('SELECT id, username FROM users WHERE email = ? LIMIT 1', [email]);
+    
+    if (user) {
+      console.log(`Password reset requested for user: ${user.username} (${email})`);
+      // In production, send actual email here
     }
-    req.flash('success_msg', 'Password reset link sent to your email. (Demo mode)');
+
+    req.flash('success_msg', 'If an account with that email exists, password reset instructions have been sent.');
     res.redirect('/login');
   } catch (err) {
-    console.error(err);
-    req.flash('error_msg', 'An error occurred');
+    console.error('Forgot password error:', err);
+    req.flash('error_msg', 'An error occurred. Please try again.');
     res.redirect('/forgot-password');
   }
 });
 
 module.exports = router;
+

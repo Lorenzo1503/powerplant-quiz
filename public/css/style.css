@@ -225,6 +225,37 @@ body {
   cursor: not-allowed;
 }
 
+/* ===== Google SSO Button ===== */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: var(--gray-400);
+  font-size: 0.85rem;
+}
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--gray-200);
+}
+.divider span { padding: 0 16px; }
+
+.btn-google {
+  background: white;
+  color: var(--gray-700);
+  border: 2px solid var(--gray-200);
+  font-weight: 600;
+}
+.btn-google:hover { 
+  background: var(--gray-50); 
+  border-color: var(--gray-300);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.btn-google i { color: #ea4335; font-size: 1.1rem; }
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
