@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' - ' : '' %>PowerPlant Quiz</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <% if (typeof user !== 'undefined' && user) { %>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <i class="fas fa-industry"></i> PowerPlant Quiz
+      </a>
+      <div class="nav-toggle" id="navToggle">
+        <i class="fas fa-bars"></i>
+      </div>
+      <ul class="nav-menu" id="navMenu">
+        <% if (user.role === 'admin') { %>
+          <li><a href="/admin/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+          <li><a href="/admin/users"><i class="fas fa-users"></i> Users</a></li>
+          <li><a href="/admin/questions"><i class="fas fa-question-circle"></i> Questions</a></li>
+          <li><a href="/admin/reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+        <% } else { %>
+          <li><a href="/student/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+          <li><a href="/quiz/start"><i class="fas fa-play-circle"></i> Take Quiz</a></li>
+          <li><a href="/quiz/history"><i class="fas fa-history"></i> History</a></li>
+          <li><a href="/student/profile"><i class="fas fa-user"></i> Profile</a></li>
+        <% } %>
+        <li><a href="/logout" class="nav-logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+  <% } %>
+  
+  <div class="container">
+    <% if (typeof success_msg !== 'undefined' && success_msg) { %>
+      <% if (typeof success_msg === 'string') { %>
+        <div class="alert alert-success"><i class="fas fa-check-circle"></i> <%= success_msg %></div>
+      <% } else { %>
+        <% success_msg.forEach(function(msg) { %>
+          <div class="alert alert-success"><i class="fas fa-check-circle"></i> <%= msg %></div>
+        <% }); %>
+      <% } %>
+    <% } %>
+    
+    <% if (typeof error_msg !== 'undefined' && error_msg) { %>
+      <% if (typeof error_msg === 'string') { %>
+        <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <%= error_msg %></div>
+      <% } else { %>
+        <% error_msg.forEach(function(msg) { %>
+          <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i> <%= msg %></div>
+        <% }); %>
+      <% } %>
+    <% } %>
+

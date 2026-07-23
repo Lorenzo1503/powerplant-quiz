@@ -1,0 +1,133 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+  <p>Welcome back, <%= user.full_name || user.username %></p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-icon"><i class="fas fa-users"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.totalStudents %></h3>
+      <p>Total Students</p>
+    </div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-icon"><i class="fas fa-question-circle"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.totalQuestions %></h3>
+      <p>Questions</p>
+    </div>
+  </div>
+  <div class="stat-card stat-purple">
+    <div class="stat-icon"><i class="fas fa-clipboard-list"></i></div>
+    <div class="stat-content">
+      <h3><%= stats.totalQuizzes %></h3>
+      <p>Quizzes Taken</p>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-user-clock"></i> Recent Users</h2>
+      <a href="/admin/users" class="btn btn-sm">View All</a>
+    </div>
+    <div class="card-body">
+      <% if (recentUsers.length) { %>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% recentUsers.forEach(function(u) { %>
+            <tr>
+              <td><%= u.id %></td>
+              <td><%= u.username %></td>
+              <td><%= u.email %></td>
+              <td><span class="badge badge-<%= u.role %>"><%= u.role %></span></td>
+              <td><span class="badge badge-<%= u.is_active ? 'active' : 'inactive' %>"><%= u.is_active ? 'Active' : 'Inactive' %></span></td>
+              <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+      <p class="text-muted">No users yet.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-chart-pie"></i> Module Distribution</h2>
+    </div>
+    <div class="card-body">
+      <% if (moduleStats.length) { %>
+      <div class="module-stats">
+        <% moduleStats.forEach(function(m) { %>
+        <div class="module-stat-item">
+          <div class="module-stat-label"><%= m.module %></div>
+          <div class="module-stat-bar">
+            <div class="module-stat-fill" style="width: <%= (m.count / Math.max(...moduleStats.map(x => x.count))) * 100 %>%"></div>
+          </div>
+          <div class="module-stat-count"><%= m.count %> Qs</div>
+        </div>
+        <% }); %>
+      </div>
+      <% } else { %>
+      <p class="text-muted">No modules found.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-2">
+  <div class="card-header">
+    <h2><i class="fas fa-history"></i> Recent Quiz Attempts</h2>
+  </div>
+  <div class="card-body">
+    <% if (recentQuizzes.length) { %>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Score</th>
+            <th>Correct</th>
+            <th>Total</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentQuizzes.forEach(function(q) { %>
+          <tr>
+            <td><%= q.username %></td>
+            <td><span class="badge badge-<%= q.score >= 60 ? 'active' : 'inactive' %>"><%= q.score %>%</span></td>
+            <td><%= q.correct_count %></td>
+            <td><%= q.total_questions %></td>
+            <td><%= new Date(q.completed_at).toLocaleString() %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <p class="text-muted">No quizzes taken yet.</p>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

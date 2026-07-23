@@ -1,0 +1,63 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-play-circle"></i> Start New Quiz</h1>
+  <p>Configure your quiz settings below</p>
+</div>
+
+<div class="card card-form-lg">
+  <div class="card-body">
+    <form action="/quiz/generate" method="POST">
+      <div class="form-group">
+        <label for="module"><i class="fas fa-book"></i> Module</label>
+        <select id="module" name="module">
+          <option value="all">All Modules</option>
+          <% modules.forEach(function(m) { %>
+            <option value="<%= m %>" <%= typeof module !== 'undefined' && module === m ? 'selected' : '' %>><%= m %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="topic"><i class="fas fa-tag"></i> Topic</label>
+        <select id="topic" name="topic">
+          <option value="all">All Topics</option>
+          <% topics.forEach(function(t) { %>
+            <option value="<%= t %>"><%= t %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="difficulty"><i class="fas fa-signal"></i> Difficulty</label>
+          <select id="difficulty" name="difficulty">
+            <option value="all">All Levels</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="question_count"><i class="fas fa-list-ol"></i> Number of Questions</label>
+          <select id="question_count" name="question_count">
+            <option value="5">5 Questions</option>
+            <option value="10" selected>10 Questions</option>
+            <option value="15">15 Questions</option>
+            <option value="20">20 Questions</option>
+            <option value="30">30 Questions</option>
+            <option value="50">50 Questions</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block">
+        <i class="fas fa-play"></i> Generate Quiz
+      </button>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

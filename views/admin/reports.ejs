@@ -1,0 +1,78 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-chart-bar"></i> Quiz Reports</h1>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-users"></i> Student Performance</h2>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Quizzes</th>
+              <th>Avg Score</th>
+              <th>Correct Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% quizStats.forEach(function(s) { %>
+            <tr>
+              <td><%= s.username %></td>
+              <td><span class="badge badge-<%= s.role %>"><%= s.role %></span></td>
+              <td><%= s.quiz_count %></td>
+              <td>
+                <span class="badge badge-<%= (s.avg_score || 0) >= 60 ? 'active' : 'inactive' %>">
+                  <%= Math.round(s.avg_score || 0) %>%
+                </span>
+              </td>
+              <td>
+                <% if (s.total_questions > 0) { %>
+                  <%= Math.round((s.total_correct / s.total_questions) * 100) %>%
+                <% } else { %>
+                  N/A
+                <% } %>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-calendar"></i> Daily Activity (Last 30 Days)</h2>
+    </div>
+    <div class="card-body">
+      <% if (dailyStats.length) { %>
+      <div class="daily-stats">
+        <% dailyStats.forEach(function(d) { %>
+        <div class="daily-stat-item">
+          <div class="daily-stat-date"><%= d.date %></div>
+          <div class="daily-stat-bar-container">
+            <div class="daily-stat-bar" style="width: <%= (d.count / Math.max(...dailyStats.map(x => x.count))) * 100 %>%"></div>
+          </div>
+          <div class="daily-stat-info">
+            <span><%= d.count %> quizzes</span>
+            <span>Avg: <%= Math.round(d.avg_score || 0) %>%</span>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <% } else { %>
+      <p class="text-muted">No quiz activity yet.</p>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

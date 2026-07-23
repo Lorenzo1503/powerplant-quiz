@@ -1,0 +1,41 @@
+<%- include('../partials/header') %>
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <i class="fas fa-industry auth-icon"></i>
+      <h1>PowerPlant Quiz</h1>
+      <p>Sign in to your account</p>
+    </div>
+    
+    <form action="/login" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username"><i class="fas fa-user"></i> Username or Email</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username or email" required autofocus>
+      </div>
+      
+      <div class="form-group">
+        <label for="password"><i class="fas fa-lock"></i> Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+      
+      <button type="submit" class="btn btn-primary btn-block">
+        <i class="fas fa-sign-in-alt"></i> Sign In
+      </button>
+    </form>
+    
+    <div class="auth-links">
+      <a href="/forgot-password"><i class="fas fa-key"></i> Forgot Password?</a>
+      <a href="/register"><i class="fas fa-user-plus"></i> Create Account</a>
+    </div>
+    
+    <div class="auth-demo">
+      <p><strong>Demo Accounts:</strong></p>
+      <p>Admin: <code>admin</code> / <code>Admin@123</code></p>
+      <p><em>Register a new account for student access</em></p>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

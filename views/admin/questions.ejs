@@ -1,0 +1,146 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-question-circle"></i> Question Bank</h1>
+  <div class="header-info">
+    <span class="badge badge-info"><%= totalQuestions %> Total Questions</span>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table" id="questionsTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Module</th>
+            <th>Topic</th>
+            <th>Difficulty</th>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Review Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% questions.forEach(function(q) { %>
+          <tr>
+            <td><%= q.id %></td>
+            <td><span class="badge badge-module"><%= (q.module || '').substring(0, 25) %></span></td>
+            <td><%= (q.topic || '').substring(0, 20) %></td>
+            <td><span class="badge badge-<%= q.difficulty === 'Hard' ? 'danger' : q.difficulty === 'Medium' ? 'warning' : 'success' %>"><%= q.difficulty %></span></td>
+            <td class="question-text-cell" title="<%= q.question_text %>"><%= (q.question_text || '').substring(0, 60) %><%= (q.question_text || '').length > 60 ? '...' : '' %></td>
+            <td><span class="badge badge-answer"><%= q.correct_answer %></span></td>
+            <td>
+              <% if (q.ai_review_status) { %>
+                <span class="badge badge-<%= q.ai_review_status === 'Verified-No Change' ? 'active' : 'info' %>"><%= q.ai_review_status %></span>
+              <% } else { %>
+                <span class="badge badge-inactive">Pending</span>
+              <% } %>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="editQuestion(<%= q.id %>)">
+                <i class="fas fa-edit"></i>
+              </button>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% if (currentPage > 1) { %>
+        <a href="/admin/questions?page=<%= currentPage - 1 %>" class="btn btn-sm">&laquo; Previous</a>
+      <% } %>
+      <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+      <% if (currentPage < totalPages) { %>
+        <a href="/admin/questions?page=<%= currentPage + 1 %>" class="btn btn-sm">Next &raquo;</a>
+      <% } %>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Edit Question Modal -->
+<div id="editQuestionModal" class="modal">
+  <div class="modal-content modal-lg">
+    <div class="modal-header">
+      <h2><i class="fas fa-edit"></i> Edit Question</h2>
+      <span class="close" onclick="document.getElementById('editQuestionModal').classList.remove('show')">&times;</span>
+    </div>
+    <form id="editQuestionForm" method="POST">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Module</label>
+          <input type="text" name="module" id="edit_module">
+        </div>
+        <div class="form-group">
+          <label>Topic</label>
+          <input type="text" name="topic" id="edit_topic">
+        </div>
+        <div class="form-group">
+          <label>Question Text *</label>
+          <textarea name="question_text" id="edit_question_text" rows="3" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Option A *</label>
+            <input type="text" name="option_a" id="edit_option_a" required>
+          </div>
+          <div class="form-group">
+            <label>Option B *</label>
+            <input type="text" name="option_b" id="edit_option_b" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Option C</label>
+            <input type="text" name="option_c" id="edit_option_c">
+          </div>
+          <div class="form-group">
+            <label>Option D</label>
+            <input type="text" name="option_d" id="edit_option_d">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Correct Answer *</label>
+          <select name="correct_answer" id="edit_correct_answer" required>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('editQuestionModal').classList.remove('show')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+<script>
+function editQuestion(id) {
+  // Fetch question data and populate modal
+  fetch(`/admin/questions/edit/${id}`, { method: 'GET' })
+    .catch(() => {
+      // Since we use POST for saving, we'll use a workaround
+      const row = event.target.closest('tr');
+      const cells = row.querySelectorAll('td');
+      
+      document.getElementById('edit_module').value = cells[1]?.textContent?.trim() || '';
+      document.getElementById('edit_topic').value = cells[2]?.textContent?.trim() || '';
+      
+      // Show modal with empty form - user fills in
+      document.getElementById('editQuestionForm').action = `/admin/questions/edit/${id}`;
+      document.getElementById('editQuestionModal').classList.add('show');
+    });
+}
+</script>
+

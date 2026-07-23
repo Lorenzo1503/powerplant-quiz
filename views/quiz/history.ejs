@@ -1,0 +1,54 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-history"></i> Quiz History</h1>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <% if (quizzes.length) { %>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Score</th>
+            <th>Correct</th>
+            <th>Total</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% quizzes.forEach(function(q, i) { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><%= new Date(q.completed_at).toLocaleString() %></td>
+            <td><strong><%= Math.round(q.score) %>%</strong></td>
+            <td><%= q.correct_count %></td>
+            <td><%= q.total_questions %></td>
+            <td><%= Math.floor(q.time_taken_seconds / 60) %>m <%= q.time_taken_seconds % 60 %>s</td>
+            <td>
+              <span class="badge badge-<%= q.score >= 60 ? 'active' : 'inactive' %>">
+                <%= q.score >= 60 ? 'PASSED' : 'FAILED' %>
+              </span>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <i class="fas fa-clipboard"></i>
+      <h3>No quiz history</h3>
+      <p>You haven't taken any quizzes yet.</p>
+      <a href="/quiz/start" class="btn btn-primary"><i class="fas fa-play"></i> Start Your First Quiz</a>
+    </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

@@ -1,0 +1,85 @@
+<%- include('../partials/header') %>
+
+<div class="page-header text-center">
+  <h1>Quiz Results</h1>
+</div>
+
+<div class="results-container">
+  <div class="results-summary card">
+    <div class="card-body text-center">
+      <div class="results-status <%= results.passFail === 'PASSED' ? 'status-passed' : 'status-failed' %>">
+        <i class="fas fa-<%= results.passFail === 'PASSED' ? 'check-circle' : 'times-circle' %>"></i>
+        <h2><%= results.passFail %></h2>
+      </div>
+      
+      <div class="results-score">
+        <div class="score-circle <%= results.passFail === 'PASSED' ? 'score-pass' : 'score-fail' %>">
+          <span class="score-value"><%= Math.round(results.score) %>%</span>
+        </div>
+      </div>
+
+      <div class="results-stats">
+        <div class="result-stat">
+          <span class="stat-label">Correct</span>
+          <span class="stat-value stat-correct"><%= results.correctCount %></span>
+        </div>
+        <div class="result-stat">
+          <span class="stat-label">Incorrect</span>
+          <span class="stat-value stat-incorrect"><%= results.totalQuestions - results.correctCount %></span>
+        </div>
+        <div class="result-stat">
+          <span class="stat-label">Total</span>
+          <span class="stat-value"><%= results.totalQuestions %></span>
+        </div>
+        <div class="result-stat">
+          <span class="stat-label">Time</span>
+          <span class="stat-value"><%= Math.floor(results.timeTaken / 60) %>m <%= results.timeTaken % 60 %>s</span>
+        </div>
+      </div>
+
+      <div class="results-actions">
+        <a href="/quiz/start" class="btn btn-primary"><i class="fas fa-redo"></i> Take Another Quiz</a>
+        <a href="/student/dashboard" class="btn btn-secondary"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-2">
+    <div class="card-header">
+      <h2><i class="fas fa-list"></i> Answer Review</h2>
+    </div>
+    <div class="card-body">
+      <% results.answers.forEach(function(answer, i) { %>
+      <div class="answer-review-item <%= answer.isCorrect ? 'answer-correct' : 'answer-incorrect' %>">
+        <div class="answer-number"><%= i + 1 %></div>
+        <div class="answer-details">
+          <p class="answer-question"><%= answer.questionText %></p>
+          <p class="answer-meta">
+            <span class="answer-label">Your answer:</span>
+            <span class="answer-value <%= answer.isCorrect ? 'text-correct' : 'text-incorrect' %>">
+              <%= answer.selectedAnswer %>. <%= answer.correctAnswer %>
+            </span>
+          </p>
+          <% if (!answer.isCorrect) { %>
+          <p class="answer-meta">
+            <span class="answer-label">Correct answer:</span>
+            <span class="answer-value text-correct"><%= answer.correctAnswer %></span>
+          </p>
+          <% } %>
+          <% if (answer.explanation) { %>
+          <div class="answer-explanation">
+            <i class="fas fa-info-circle"></i> <%= answer.explanation %>
+          </div>
+          <% } %>
+        </div>
+        <div class="answer-icon">
+          <i class="fas fa-<%= answer.isCorrect ? 'check-circle' : 'times-circle' %>"></i>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+

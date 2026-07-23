@@ -1,0 +1,127 @@
+<%- include('../partials/header') %>
+
+<div class="quiz-container">
+  <div class="quiz-header">
+    <div class="quiz-progress-info">
+      <span class="quiz-question-number">Question <%= currentIndex + 1 %> of <%= totalQuestions %></span>
+      <span class="quiz-timer" id="quizTimer">00:00</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" style="width: <%= progress %>%"></div>
+    </div>
+  </div>
+
+  <div class="quiz-card card" id="quizCard">
+    <div class="card-body">
+      <div class="quiz-module-badge">
+        <span class="badge badge-info"><%= question.module %></span>
+        <span class="badge badge-<%= question.difficulty === 'Hard' ? 'danger' : question.difficulty === 'Medium' ? 'warning' : 'success' %>"><%= question.difficulty %></span>
+      </div>
+
+      <h2 class="quiz-question"><%= question.question_text %></h2>
+
+      <div class="quiz-options" id="quizOptions">
+        <% if (question.option_a) { %>
+        <div class="quiz-option" onclick="selectOption('A')" data-value="A">
+          <div class="option-letter">A</div>
+          <div class="option-text"><%= question.option_a %></div>
+        </div>
+        <% } %>
+        <% if (question.option_b) { %>
+        <div class="quiz-option" onclick="selectOption('B')" data-value="B">
+          <div class="option-letter">B</div>
+          <div class="option-text"><%= question.option_b %></div>
+        </div>
+        <% } %>
+        <% if (question.option_c) { %>
+        <div class="quiz-option" onclick="selectOption('C')" data-value="C">
+          <div class="option-letter">C</div>
+          <div class="option-text"><%= question.option_c %></div>
+        </div>
+        <% } %>
+        <% if (question.option_d) { %>
+        <div class="quiz-option" onclick="selectOption('D')" data-value="D">
+          <div class="option-letter">D</div>
+          <div class="option-text"><%= question.option_d %></div>
+        </div>
+        <% } %>
+      </div>
+
+      <div class="quiz-actions">
+        <button class="btn btn-primary btn-lg" id="nextBtn" onclick="submitAnswer()" disabled>
+          <span id="nextBtnText"><%= currentIndex + 1 < totalQuestions ? 'Next Question' : 'Finish Quiz' %></span>
+          <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback overlay (shown after answering) -->
+  <div class="quiz-feedback" id="quizFeedback" style="display:none;">
+    <div class="feedback-icon" id="feedbackIcon"></div>
+    <div class="feedback-text" id="feedbackText"></div>
+    <div class="feedback-explanation" id="feedbackExplanation"></div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+let selectedAnswer = null;
+let startTime = Date.now();
+
+// Timer
+const timerEl = document.getElementById('quizTimer');
+const timerInterval = setInterval(() => {
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const secs = String(elapsed % 60).padStart(2, '0');
+  timerEl.textContent = `${mins}:${secs}`;
+}, 1000);
+
+function selectOption(value) {
+  selectedAnswer = value;
+  document.querySelectorAll('.quiz-option').forEach(el => {
+    el.classList.toggle('selected', el.dataset.value === value);
+  });
+  document.getElementById('nextBtn').disabled = false;
+}
+
+async function submitAnswer() {
+  if (!selectedAnswer) return;
+
+  const nextBtn = document.getElementById('nextBtn');
+  const nextBtnText = document.getElementById('nextBtnText');
+  nextBtn.disabled = true;
+  nextBtnText.textContent = 'Processing...';
+
+  try {
+    const response = await fetch('/quiz/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answer: selectedAnswer })
+    });
+
+    const data = await response.json();
+
+    if (data.finished) {
+      window.location.href = '/quiz/results';
+    } else {
+      window.location.reload();
+    }
+  } catch (err) {
+    console.error('Error submitting answer:', err);
+    window.location.reload();
+  }
+}
+
+// Keyboard support
+document.addEventListener('keydown', (e) => {
+  if (e.key === '1' || e.key.toLowerCase() === 'a') selectOption('A');
+  if (e.key === '2' || e.key.toLowerCase() === 'b') selectOption('B');
+  if (e.key === '3' || e.key.toLowerCase() === 'c') selectOption('C');
+  if (e.key === '4' || e.key.toLowerCase() === 'd') selectOption('D');
+  if (e.key === 'Enter' && !document.getElementById('nextBtn').disabled) submitAnswer();
+});
+</script>
+

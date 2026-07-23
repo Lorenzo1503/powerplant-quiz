@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><i class="fas fa-users-cog"></i> User Management</h1>
+  <button class="btn btn-primary" onclick="document.getElementById('createUserModal').classList.add('show')">
+    <i class="fas fa-user-plus"></i> Add User
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table" id="usersTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Role</th>
+            <th>Student ID</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(u) { %>
+          <tr>
+            <td><%= u.id %></td>
+            <td><%= u.username %></td>
+            <td><%= u.email %></td>
+            <td><%= u.full_name %></td>
+            <td><span class="badge badge-<%= u.role %>"><%= u.role %></span></td>
+            <td><%= u.student_id || '-' %></td>
+            <td>
+              <span class="badge badge-<%= u.is_active ? 'active' : 'inactive' %>">
+                <%= u.is_active ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+            <td class="actions">
+              <form action="/admin/users/toggle/<%= u.id %>" method="POST" style="display:inline">
+                <button type="submit" class="btn btn-sm badge-<%= u.is_active ? 'inactive' : 'active' %>" 
+                  title="<%= u.is_active ? 'Deactivate' : 'Activate' %>">
+                  <i class="fas fa-<%= u.is_active ? 'ban' : 'check' %>"></i>
+                </button>
+              </form>
+              <form action="/admin/users/delete/<%= u.id %>" method="POST" style="display:inline" 
+                onsubmit="return confirm('Delete this user? This action cannot be undone.')">
+                <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Create User Modal -->
+<div id="createUserModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-user-plus"></i> Create New User</h2>
+      <span class="close" onclick="document.getElementById('createUserModal').classList.remove('show')">&times;</span>
+    </div>
+    <form action="/admin/users/create" method="POST">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" name="username" required>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" required>
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" name="password" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" name="full_name">
+        </div>
+        <div class="form-group">
+          <label>Student ID</label>
+          <input type="text" name="student_id">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select name="role">
+            <option value="student">Student</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('createUserModal').classList.remove('show')">Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
