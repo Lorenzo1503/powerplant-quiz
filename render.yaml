@@ -4,7 +4,7 @@ services:
     runtime: node
     repo: https://github.com/Lorenzo1503/powerplant-quiz
     branch: master
-    buildCommand: node init_db.js
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /
     envVars:
