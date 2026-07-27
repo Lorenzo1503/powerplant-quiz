@@ -44,19 +44,21 @@ router.post('/login', (req, res, next) => {
   })(req, res, next);
 });
 
-// ===== GOOGLE OAUTH =====
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-router.get('/auth/google/callback', 
-  passport.authenticate('google', { 
-    failureRedirect: '/login',
-    failureFlash: true 
-  }),
-  (req, res) => {
-    req.flash('success_msg', 'Successfully signed in with Google!');
-    res.redirect('/');
-  }
-);
+// ===== GOOGLE OAUTH (conditional - only if configured) =====
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+  
+  router.get('/auth/google/callback', 
+    passport.authenticate('google', { 
+      failureRedirect: '/login',
+      failureFlash: true 
+    }),
+    (req, res) => {
+      req.flash('success_msg', 'Successfully signed in with Google!');
+      res.redirect('/');
+    }
+  );
+}
 
 // ===== REGISTER =====
 router.get('/register', (req, res) => {
