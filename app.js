@@ -4,7 +4,6 @@ const session = require('express-session');
 const passport = require('passport');
 const flash = require('connect-flash');
 const path = require('path');
-const fs = require('fs');
 const { getDb } = require('./db');
 require('./middleware/auth');
 
@@ -20,12 +19,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Session
+// Session - match Render session_store config
 app.use(session({
   secret: process.env.SESSION_SECRET || 'powerplant-quiz-secret',
-  resave: true,
-  saveUninitialized: true,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
 // Passport
@@ -59,13 +58,31 @@ app.get('/', (req, res) => {
   res.redirect('/login');
 });
 
-// Landing page for non-authenticated users
+// Landing page
 app.get('/landing', (req, res) => {
   if (req.user) {
     if (req.user.role === 'admin') return res.redirect('/admin/dashboard');
     return res.redirect('/student/dashboard');
   }
   res.render('landing', { title: 'PowerPlant Quiz - Engineering Exam Prep' });
+});
+
+// Health check endpoint for Render
+app.get('/health', async (req, res) => {
+  try {
+    const { queryOne } = require('./db');
+    await getDb();
+    const userCount = queryOne('SELECT COUNT(*) as count FROM users');
+    const qCount = queryOne('SELECT COUNT(*) as count FROM questions');
+    res.json({
+      status: 'ok',
+      users: userCount?.count || 0,
+      questions: qCount?.count || 0,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
 });
 
 // 404 handler
@@ -82,31 +99,25 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Initialize DB and start server
+// Start server - db.js handles auto-initialization
 async function start() {
   try {
-    // Auto-initialize database on first run
-    const dbPath = path.join(__dirname, 'database.sqlite');
-    if (!fs.existsSync(dbPath)) {
-      console.log('Database not found. Running initialization...');
-      try {
-        await require('./init_db')();
-        console.log('Database initialized successfully.');
-      } catch (initErr) {
-        console.error('Database initialization failed:', initErr.message);
-        // Continue anyway - tables might already exist
-      }
-    }
+    console.log('Initializing database...');
+    const db = await getDb();
+    const { queryOne } = require('./db');
+    const userCount = queryOne('SELECT COUNT(*) as count FROM users');
+    const qCount = queryOne('SELECT COUNT(*) as count FROM questions');
+    console.log(`Database ready: ${userCount?.count || 0} users, ${qCount?.count || 0} questions`);
 
-    // Store getDb function for route access
     app.locals.getDb = getDb;
 
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`PowerPlant Quiz server running on http://0.0.0.0:${PORT}`);
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
+    console.error('Failed to start server:', err.message);
+    console.log('Retrying in 3 seconds...');
+    setTimeout(start, 3000);
   }
 }
 
