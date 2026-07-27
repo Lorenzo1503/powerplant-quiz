@@ -1,4 +1,4 @@
-const { getDb, run, execute, queryOne, saveDb, closeDb } = require('./db');
+const { getDb, execute, queryOne, saveDb, closeDb } = require('./db');
 const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
@@ -10,7 +10,7 @@ async function initializeDatabase() {
   console.log('Creating tables...');
   
   // Create tables
-  run(`
+  execute(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -28,12 +28,12 @@ async function initializeDatabase() {
 
   // Add google_id column if it doesn't exist (migration for existing databases)
   try {
-    run(`ALTER TABLE users ADD COLUMN google_id TEXT`);
+    execute(`ALTER TABLE users ADD COLUMN google_id TEXT`);
   } catch (e) {
     // Column already exists, ignore
   }
 
-  run(`
+  execute(`
     CREATE TABLE IF NOT EXISTS questions (
       id INTEGER PRIMARY KEY,
       type TEXT,
@@ -71,7 +71,7 @@ async function initializeDatabase() {
     )
   `);
 
-  run(`
+  execute(`
     CREATE TABLE IF NOT EXISTS quiz_attempts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL,
@@ -84,7 +84,7 @@ async function initializeDatabase() {
     )
   `);
 
-  run(`
+  execute(`
     CREATE TABLE IF NOT EXISTS quiz_answers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       attempt_id INTEGER NOT NULL,

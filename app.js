@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Session - match Render session_store config
+// Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'powerplant-quiz-secret',
   resave: false,
@@ -99,25 +99,38 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server - db.js handles auto-initialization
+// Quick-start with background CSV import
 async function start() {
   try {
-    console.log('Initializing database...');
+    console.log('Initializing database (lightweight mode)...');
     const db = await getDb();
-    const { queryOne } = require('./db');
+    const { queryOne, startBackgroundImport } = require('./db');
     const userCount = queryOne('SELECT COUNT(*) as count FROM users');
-    const qCount = queryOne('SELECT COUNT(*) as count FROM questions');
-    console.log(`Database ready: ${userCount?.count || 0} users, ${qCount?.count || 0} questions`);
-
+    console.log(`Database ready: ${userCount?.count || 0} users`);
     app.locals.getDb = getDb;
 
-    app.listen(PORT, '0.0.0.0', () => {
+    // Start importing questions in the background - non-blocking
+    startBackgroundImport();
+
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`PowerPlant Quiz server running on http://0.0.0.0:${PORT}`);
     });
+    server.timeout = 30000;
   } catch (err) {
     console.error('Failed to start server:', err.message);
-    console.log('Retrying in 3 seconds...');
-    setTimeout(start, 3000);
+    // Retry once
+    setTimeout(async () => {
+      try {
+        await getDb();
+        require('./db').startBackgroundImport();
+        app.listen(PORT, '0.0.0.0', () => {
+          console.log(`PowerPlant Quiz server running on http://0.0.0.0:${PORT} (retry)`);
+        });
+      } catch (e) {
+        console.error('Fatal startup failure:', e.message);
+        process.exit(1);
+      }
+    }, 3000);
   }
 }
 

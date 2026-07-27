@@ -1,6 +1,5 @@
 node_modules/
 .env
-database.sqlite
 QuestionBank_Reviewed.csv
 review_progress.json
 *.log
