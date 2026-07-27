@@ -1,5 +1,6 @@
 node_modules/
 .env
+.import_complete
 QuestionBank_Reviewed.csv
 review_progress.json
 *.log
