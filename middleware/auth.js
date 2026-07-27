@@ -1,8 +1,17 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');
 const { getDb, queryOne, execute, saveDb } = require('../db');
+
+// Only load Google Strategy if credentials are available
+let GoogleStrategy = null;
+try {
+  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+    GoogleStrategy = require('passport-google-oauth20').Strategy;
+  }
+} catch (e) {
+  console.log('Google OAuth not available:', e.message);
+}
 
 // ===== LOCAL STRATEGY =====
 passport.use(new LocalStrategy(async (username, password, done) => {
