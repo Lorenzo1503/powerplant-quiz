@@ -67,7 +67,7 @@ app.get('/landing', (req, res) => {
   res.render('landing', { title: 'PowerPlant Quiz - Engineering Exam Prep' });
 });
 
-// Health check endpoint for Render
+// Health check endpoint for Render (must be before 404 handler)
 app.get('/health', async (req, res) => {
   try {
     const { queryOne } = require('./db');
